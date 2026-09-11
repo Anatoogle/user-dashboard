@@ -4,11 +4,27 @@ import { Link } from "react-router-dom";
 function Register() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [name, setName] = useState("");
+    const [message, setMessage] = useState("");
 
-    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        console.log("Register: ", email, password);
+        const response = await fetch("http://localhost:3000/api/users", {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+            name,
+            email,
+            password,
+            }),
+        });
+
+        const data = await response.json();
+
+        setMessage(data.message);
     }
 
     return (
@@ -17,6 +33,18 @@ function Register() {
 
             <form onSubmit={handleSubmit}>
                 <div>
+                    <label>
+                        Name 
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(event) => setName(event.target.value)}
+                        />
+                    </label>
+                </div>
+
+                <div>
+
                     <label htmlFor="email">Email </label>
                     <input
                         id="email"
@@ -39,6 +67,8 @@ function Register() {
                 <button type="submit">Register </button>
             </form>
 
+            {message && <p>{message}</p>}
+            
             <Link to="/login">Already have an account? Login</Link>
         </main>
     )
