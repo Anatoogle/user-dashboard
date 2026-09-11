@@ -1,5 +1,7 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import { prisma } from "./db.js";
 
 // Create an instance of the Express application
 const app = express();
@@ -13,19 +15,23 @@ app.use(express.json());
 const PORT = 3000;
 
 // Define a route to handle POST requests to the /api/users URL
-app.post("/api/users", (req, res) => {
-    const { name, email } = req.body;
+app.post("/api/users", async (req, res) => {
+  const { name, email, password } = req.body;
 
-    console.log("New user:", name, email);
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password,
+    },
+  });
 
-    res.status(201).json({
-        message: "User created",
-        user: {
-            name,
-            email,
-        },
-    });
+  res.status(201).json({
+    message: "User created",
+    user,
+  });
 });
+
 
 // Define a route to handle GET requests to the root URL
 app.get("/", (req, res) => {
