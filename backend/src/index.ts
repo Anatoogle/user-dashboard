@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { prisma } from "./db.js";
 import { Prisma } from "./generated/prisma/client.js";
+import bcrypt from "bcrypt";
 
 // Create an instance of the Express application
 const app = express();
@@ -18,19 +19,24 @@ const PORT = 3000;
 // Define a route to handle POST requests to the /api/users URL
 app.post("/api/users", async (req, res) => {
     const { name, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
         const user = await prisma.user.create({
             data: {
             name,
             email,
-            password,
+            password: hashedPassword,
             },
         });
 
         res.status(201).json({
             message: "User created",
-            user,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            },
         });
     } catch (error) {
         if(
