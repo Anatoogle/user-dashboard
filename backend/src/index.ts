@@ -16,6 +16,43 @@ app.use(express.json());
 
 const PORT = 3000;
 
+app.post("/api/login", async (req, res) => {
+    const { email, password } = req.body;
+
+    const user = await prisma.user.findUnique({
+        where: {
+            email,
+        },
+    });
+
+    if(!user) {
+        res.status(401).json({
+            message: "Invalid email or password",
+        });
+
+        return;
+    }
+
+    const passwordMatches = await bcrypt.compare(password, user.password);
+
+    if(!passwordMatches) {
+        res.status(401).json({
+            message: "Invalid email or password",
+        });
+
+        return;
+    }
+
+    res.json({
+        message: "Login successful",
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        },
+    });
+});
+
 // Define a route to handle POST requests to the /api/users URL
 app.post("/api/users", async (req, res) => {
     const { name, email, password } = req.body;
