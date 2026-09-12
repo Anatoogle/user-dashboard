@@ -4,15 +4,35 @@ import cors from "cors";
 import { prisma } from "./db.js";
 import { Prisma } from "./generated/prisma/client.js";
 import bcrypt from "bcrypt";
+import session from "express-session";
 
 // Create an instance of the Express application
 const app = express();
 
 // to allow cross-origin requests, we need to use the cors() middleware
-app.use(cors());
+// allow credentials to be sent with the request, so that the session cookie can be set
+app.use(
+    cors({
+        origin: "http://localhost:5173",
+        credentials: true,
+    }),
+);
 
 // to read JSON data from the request body, we need to use express.json() middleware
 app.use(express.json());
+
+// to use sessions, we need to use the express-session middleware
+app.use(
+    session({
+        secret: "development-secret",
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            httpOnly: true,
+            secure: false,
+        },
+    }),
+);
 
 const PORT = 3000;
 
@@ -43,6 +63,8 @@ app.post("/api/login", async (req, res) => {
         return;
     }
 
+    req.session.userId = user.id;
+
     res.json({
         message: "Login successful",
         user: {
@@ -52,6 +74,42 @@ app.post("/api/login", async (req, res) => {
         },
     });
 });
+
+// GET /api/me
+// Session available?
+// Yes, than load userId from Session
+// load user from PostgreSQL
+// return User
+app.get("/api/me", async (req, res) => {
+    if(!req.session.userId) {
+        res.status(401).json({
+            message: "Not authenticated",
+        });
+        return;
+    }
+
+    const user = await prisma.user.findUnique({
+        where: {
+            id: req.session.userId,
+        },
+    });
+
+    if(!user) {
+        res.status(401).json({
+            message: "Not authenticated",
+        });
+
+        return;
+    }
+
+    res.json({
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        },
+    });
+})
 
 // Define a route to handle POST requests to the /api/users URL
 app.post("/api/users", async (req, res) => {
