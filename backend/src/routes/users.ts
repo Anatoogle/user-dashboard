@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
+import bcrypt from "bcrypt";
 
 const router = Router();
 
@@ -86,7 +87,90 @@ router.put("/me", async (req, res) => {
         console.error(error);
 
         res.status(500).json({
-            message: "Internal server error. Could not update user",
+            message: "Could not update user",
+        });
+    }
+});
+
+router.put("/me/password", async (req, res) => {
+    if (!req.session.userId) {
+        res.status(401).json({
+            message: "Not authenticated",
+        });
+        return;
+    }
+    
+    const { currentPassword, newPassword } = req.body;
+
+    if (
+        typeof currentPassword !== "string" ||
+        typeof newPassword !== "string" ||
+        currentPassword.trim() === "" ||
+        newPassword.trim() === ""
+    ) {
+        res.status(400).json({
+            message: "Current password and new password are required",
+        });
+
+        return;
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: req.session.userId,
+            },
+        });
+
+        if(!user) {
+            res.status(401).json({
+                message: "Not authenticated",
+            });
+
+            return;
+        }
+
+        const passwordMatches = await bcrypt.compare(
+            currentPassword,
+            user.password
+        );
+
+        if(!passwordMatches) {
+            res.status(400).json({
+                message: "Current password is incorrect",
+            });
+
+            return;
+        }
+
+        if(newPassword.length < 4) {
+            res.status(400).json({
+                message: "New password must be at least 4 characters long",
+            });
+
+            return;
+        }
+        
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await prisma.user.update({
+            where: {
+                id: user.id,
+            },
+            data: {
+                password: hashedPassword,
+            },
+        });
+
+        res.json({
+            message: "Password updated successfully",
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Could not update password",
         });
     }
 });

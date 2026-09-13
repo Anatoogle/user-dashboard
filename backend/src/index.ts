@@ -29,7 +29,10 @@ app.use(
 // to read JSON data from the request body, we need to use express.json() middleware
 app.use(express.json());
 
+
 // to use sessions, we need to use the express-session middleware
+// secure: false means that the cookie can be sent over HTTP, not just HTTPS.
+// sameSite: "lax" means that the cookie can be sent with cross-site requests, but only for top-level navigations (like clicking a link), not for subresource requests (like loading an image or making an AJAX request).
 app.use(
     session({
         secret: sessionSecret,
@@ -38,6 +41,7 @@ app.use(
         cookie: {
             httpOnly: true,
             secure: false,
+            sameSite: "lax",
         },
     }),
 );

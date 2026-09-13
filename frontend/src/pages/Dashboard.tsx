@@ -11,8 +11,10 @@ type User = {
 function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [name, setName] = useState("");
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
 
@@ -35,7 +37,7 @@ function Dashboard() {
     const data = await response.json();
 
     if (!response.ok) {
-      setMessage(data.message || "Failed to update name");
+      setMessage(data.message);
       return;
     }
 
@@ -43,6 +45,42 @@ function Dashboard() {
     setName(data.user.name);
     setMessage("Name updated successfully!");
   }
+
+  async function handleChangePassword(
+    event: React.FormEvent<HTMLFormElement>
+  ){
+    event.preventDefault();
+    
+    if(newPassword.length < 4){
+      setMessage("Password must be at least 4 characters long");
+      return;
+    }
+
+    const response = await fetch("http://localhost:3000/api/me/password", 
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(data.message);
+      return;
+    }
+
+    setMessage(data.message);
+    setCurrentPassword("");
+    setNewPassword("");
+  };
 
   // useEffect hook to fetch user data when the component mounts
   // useeffect is a hook that runs after the component renders. It can be used to fetch data, set up subscriptions, and manually change the DOM in React components.
@@ -100,6 +138,33 @@ function Dashboard() {
         </div>
       )}
       
+      <h2>Change Password</h2>
+      <form onSubmit= {handleChangePassword}>
+        <label>
+          Current Password: 
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            required
+          />
+        </label>
+
+        <label>
+          New Password:
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            minLength={4}
+            required
+          />
+        </label>
+
+        <button type="submit">
+          Change Password
+        </button>
+      </form>
       {message && <p>{message}</p>}
     </main>
   );

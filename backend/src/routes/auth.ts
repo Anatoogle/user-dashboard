@@ -103,9 +103,10 @@ router.post("/users", async (req, res) => {
         return;
     }
 
-    if (password.length < 8) {
+    // 4 only for testing purposes, in production it should be at least 8 characters long
+    if (password.length < 4) {
         res.status(400).json({
-            message: "Password must be at least 8 characters long",
+            message: "Password must be at least 4 characters long",
         });
         return;
     }
