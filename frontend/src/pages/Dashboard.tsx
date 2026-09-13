@@ -68,6 +68,9 @@ function Dashboard() {
   }, []);
 
   if (loading) {
+    return <p>Loading...</p>;
+  }
+
   return (
     <main>
       <h1>Dashboard</h1>
