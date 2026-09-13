@@ -12,27 +12,35 @@ router.get("/me", async (req, res) => {
         return;
     }
 
-    const user = await prisma.user.findUnique({
-        where: {
-            id: req.session.userId,
-        },
-    });
-
-    if(!user) {
-        res.status(401).json({
-            message: "Not authenticated",
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: req.session.userId,
+            },
         });
 
-        return;
-    }
+        if(!user) {
+            res.status(401).json({
+                message: "Not authenticated",
+            });
 
-    res.json({
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-        },
-    });
+            return;
+        }
+
+        res.json({
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Internal server error",
+        });
+    }
 })
 
 // Define a route to handle PUT requests to the /api/me URL
@@ -55,24 +63,32 @@ router.put("/me", async (req, res) => {
         return;
     }
 
-    // we take the user id from the session and update the user with the new name
-    // dont take the user id from the request body, because that would allow a user to update another user's name
-    const user = await prisma.user.update({
-        where: {
-            id: req.session.userId,
-        },
-        data: {
-            name,
-        },
-    });
+    try {
+        // we take the user id from the session and update the user with the new name
+        // dont take the user id from the request body, because that would allow a user to update another user's name
+        const user = await prisma.user.update({
+            where: {
+                id: req.session.userId,
+            },
+            data: {
+                name,
+            },
+        });
 
-    res.json({
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-        },
-    });
+        res.json({
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Internal server error. Could not update user",
+        });
+    }
 });
 
 export default router;

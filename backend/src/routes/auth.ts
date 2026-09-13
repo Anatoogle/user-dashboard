@@ -26,40 +26,48 @@ router.post("/login", async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    const user = await prisma.user.findUnique({
-        where: {
-            email: normalizedEmail,
-        },
-    });
-
-    if(!user) {
-        res.status(401).json({
-            message: "Invalid email or password",
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                email: normalizedEmail,
+            },
         });
 
-        return;
-    }
+        if(!user) {
+            res.status(401).json({
+                message: "Invalid email or password",
+            });
 
-    const passwordMatches = await bcrypt.compare(password, user.password);
+            return;
+        }
 
-    if(!passwordMatches) {
-        res.status(401).json({
-            message: "Invalid email or password",
+        const passwordMatches = await bcrypt.compare(password, user.password);
+
+        if(!passwordMatches) {
+            res.status(401).json({
+                message: "Invalid email or password",
+            });
+
+            return;
+        }
+
+        req.session.userId = user.id;
+
+        res.json({
+            message: "Login successful",
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            },
         });
+    } catch (error) {
+        console.error(error);
 
-        return;
+        res.status(500).json({
+            message: "Could not log in",
+        });
     }
-
-    req.session.userId = user.id;
-
-    res.json({
-        message: "Login successful",
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-        },
-    });
 });
 
 router.post("/logout", (req, res) => {

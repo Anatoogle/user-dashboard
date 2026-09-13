@@ -6,7 +6,7 @@ user-dashboard
 npx prisma@7.10.0 migrate deploy
 
 # start backend server
-npm exec tsx src/index.ts
+npm run dev
 
 # start frontend server
 npm run dev
