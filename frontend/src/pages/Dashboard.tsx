@@ -12,6 +12,7 @@ function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -56,30 +57,47 @@ function Dashboard() {
       return;
     }
 
-    const response = await fetch("http://localhost:3000/api/me/password", 
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+    setPasswordLoading(true);
+
+    try {
+
+      
+      const response = await fetch("http://localhost:3000/api/me/password", 
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            currentPassword,
+            newPassword,
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
-      },
-    );
+      );
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
+      if(response.status === 401) {
+        navigate("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        setMessage(data.message);
+        return;
+      }
+
       setMessage(data.message);
-      return;
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch (error) {
+      console.error(error);
+      setMessage("Could not change password");
+    } finally {
+      setPasswordLoading(false);
     }
-
-    setMessage(data.message);
-    setCurrentPassword("");
-    setNewPassword("");
+    
   };
 
   // useEffect hook to fetch user data when the component mounts
@@ -158,11 +176,12 @@ function Dashboard() {
             onChange={(event) => setNewPassword(event.target.value)}
             minLength={4}
             required
+            placeholder="At least 4 characters"
           />
         </label>
 
-        <button type="submit">
-          Change Password
+        <button type="submit" disabled={passwordLoading}>
+          {passwordLoading ? "Changing..." : "Change Password"}
         </button>
       </form>
       {message && <p>{message}</p>}
