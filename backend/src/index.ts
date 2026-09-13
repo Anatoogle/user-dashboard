@@ -259,7 +259,7 @@ app.get("/", (req, res) => {
 });
 
 // Define a route to handle GET requests to the /api/users URL
-app.get("/api/users", (req, res) => {
+/* app.get("/api/users", (req, res) => {
   res.json([
     {
       id: 1,
@@ -267,7 +267,7 @@ app.get("/api/users", (req, res) => {
       email: "max@example.com",
     },
   ]);
-});
+}); */
 
 // Start the server and listen on the specified port
 app.listen(PORT, () => {

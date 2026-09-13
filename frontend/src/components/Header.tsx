@@ -4,12 +4,15 @@ function Header() {
     const navigate = useNavigate();
 
     async function handleLogout() {
-        await fetch("http://localhost:3000/api/logout", {
+        const response = await fetch("http://localhost:3000/api/logout", {
             method: "POST",
             credentials: "include",
         });
 
-        navigate("/login");
+        if (response.ok) {
+            navigate("/login");
+            return;
+        }
     }
 
     return (

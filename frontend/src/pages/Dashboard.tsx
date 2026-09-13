@@ -12,6 +12,7 @@ function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -58,12 +59,15 @@ function Dashboard() {
     .then((data) => {
       setUser(data.user);
       setName(data.user.name);
+      setLoading(false);
     })
     .catch(() => {
+      setLoading(false);
       navigate("/login");
     });
   }, []);
 
+  if (loading) {
   return (
     <main>
       <h1>Dashboard</h1>
