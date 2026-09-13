@@ -1,19 +1,21 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { prisma } from "./db.js";
-import { Prisma } from "./generated/prisma/client.js";
-import bcrypt from "bcrypt";
 import session from "express-session";
+import authRouter from "./routes/auth.js";
+import usersRouter from "./routes/users.js";
 
 // Check if the SESSION_SECRET environment variable is defined
 const sessionSecret = process.env.SESSION_SECRET;
+
 if (!sessionSecret) {
   throw new Error("SESSION_SECRET is not defined");
 }
 
 // Create an instance of the Express application
 const app = express();
+
+const PORT = 3000;
 
 // to allow cross-origin requests, we need to use the cors() middleware
 // allow credentials to be sent with the request, so that the session cookie can be set
@@ -40,216 +42,9 @@ app.use(
     }),
 );
 
-const PORT = 3000;
-
-app.post("/api/login", async (req, res) => {
-    const { email, password } = req.body;
-
-    if(
-        typeof email !== "string" ||
-        typeof password !== "string" ||
-        email.trim() === "" ||
-        password.trim() === ""
-    ) {
-        res.status(400).json({
-            message: "Email and password are required",
-        });
-        
-        return;
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
-
-    const user = await prisma.user.findUnique({
-        where: {
-            email: normalizedEmail,
-        },
-    });
-
-    if(!user) {
-        res.status(401).json({
-            message: "Invalid email or password",
-        });
-
-        return;
-    }
-
-    const passwordMatches = await bcrypt.compare(password, user.password);
-
-    if(!passwordMatches) {
-        res.status(401).json({
-            message: "Invalid email or password",
-        });
-
-        return;
-    }
-
-    req.session.userId = user.id;
-
-    res.json({
-        message: "Login successful",
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-        },
-    });
-});
-
-// Define a route to handle PUT requests to the /api/me URL
-// Update the current logged in user
-app.put("/api/me", async (req, res) => {
-    if(!req.session.userId) {
-        res.status(401).json({
-            message: "Not authenticated",
-        });
-        return;
-    }
-
-    const { name } = req.body; 
-
-    if(typeof name !== "string" || name.trim() === ""){
-        res.status(400).json({
-            message: "Name is required",
-        });
-
-        return;
-    }
-
-    // we take the user id from the session and update the user with the new name
-    // dont take the user id from the request body, because that would allow a user to update another user's name
-    const user = await prisma.user.update({
-        where: {
-            id: req.session.userId,
-        },
-        data: {
-            name,
-        },
-    });
-
-    res.json({
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-        },
-    });
-});
-
-// api/me = get the current logged in user
-app.get("/api/me", async (req, res) => {
-    if(!req.session.userId) {
-        res.status(401).json({
-            message: "Not authenticated",
-        });
-        return;
-    }
-
-    const user = await prisma.user.findUnique({
-        where: {
-            id: req.session.userId,
-        },
-    });
-
-    if(!user) {
-        res.status(401).json({
-            message: "Not authenticated",
-        });
-
-        return;
-    }
-
-    res.json({
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-        },
-    });
-})
-
-app.post("/api/logout", (req, res) => {
-    req.session.destroy((error) => {
-        if (error) {
-            res.status(500).json({
-                message: "Could not log out",
-            });
-
-            return;
-        }
-
-        res.json({
-            message: "Logout successful",
-        });
-    });
-});
-
-// Define a route to handle POST requests to the /api/users URL
-app.post("/api/users", async (req, res) => {
-    const { name, email, password } = req.body;
-
-    if (
-        typeof name !== "string" ||
-        typeof email !== "string" ||
-        typeof password !== "string" ||
-        name.trim() === "" ||
-        email.trim() === "" ||
-        password.trim() === ""
-    ) {
-        res.status(400).json({
-            message: "Name, email and password are required",
-        });
-        return;
-    }
-
-    if (password.length < 8) {
-        res.status(400).json({
-            message: "Password must be at least 8 characters long",
-        });
-        return;
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    try {
-        const user = await prisma.user.create({
-            data: {
-            name: name.trim(),
-            email: normalizedEmail,
-            password: hashedPassword,
-            },
-        });
-
-        res.status(201).json({
-            message: "User created",
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-            },
-        });
-    } catch (error) {
-        if(
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === "P2002"
-        ) {
-            res.status(409).json({
-                message: "Email already registered",
-            });
-
-            return;
-        }
-        
-        console.error(error);
-
-        res.status(500).json({
-            message: "Could not create user",
-        });
-    }
-});
-
+// Use the authRouter for all routes starting with /api
+app.use("/api", authRouter);
+app.use("/api", usersRouter);
 
 // Define a route to handle GET requests to the root URL
 app.get("/", (req, res) => {
@@ -257,17 +52,6 @@ app.get("/", (req, res) => {
         message: "Backend is running!",
     });
 });
-
-// Define a route to handle GET requests to the /api/users URL
-/* app.get("/api/users", (req, res) => {
-  res.json([
-    {
-      id: 1,
-      name: "Max",
-      email: "max@example.com",
-    },
-  ]);
-}); */
 
 // Start the server and listen on the specified port
 app.listen(PORT, () => {
