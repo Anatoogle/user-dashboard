@@ -81,6 +81,46 @@ app.post("/api/login", async (req, res) => {
     });
 });
 
+// Define a route to handle PUT requests to the /api/me URL
+// Update the current logged in user
+app.put("/api/me", async (req, res) => {
+    if(!req.session.userId) {
+        res.status(401).json({
+            message: "Not authenticated",
+        });
+        return;
+    }
+
+    const { name } = req.body; 
+
+    if(typeof name !== "string" || name.trim() === ""){
+        res.status(400).json({
+            message: "Name is required",
+        });
+
+        return;
+    }
+
+    // we take the user id from the session and update the user with the new name
+    // dont take the user id from the request body, because that would allow a user to update another user's name
+    const user = await prisma.user.update({
+        where: {
+            id: req.session.userId,
+        },
+        data: {
+            name,
+        },
+    });
+
+    res.json({
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        },
+    });
+});
+
 // api/me = get the current logged in user
 app.get("/api/me", async (req, res) => {
     if(!req.session.userId) {
@@ -132,6 +172,21 @@ app.post("/api/logout", (req, res) => {
 // Define a route to handle POST requests to the /api/users URL
 app.post("/api/users", async (req, res) => {
     const { name, email, password } = req.body;
+
+    if (
+        typeof name !== "string" ||
+        typeof email !== "string" ||
+        typeof password !== "string" ||
+        name.trim() === "" ||
+        email.trim() === "" ||
+        password.trim() === ""
+    ) {
+        res.status(400).json({
+            message: "Name, email and password are required",
+        });
+        return;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {

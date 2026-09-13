@@ -9,8 +9,39 @@ type User = {
 };
 
 function Dashboard() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [name, setName] = useState("");
+  const [message, setMessage] = useState("");
+
   const navigate = useNavigate();
+
+  async function handleSave() {
+    if(!user) {
+      return;
+    }
+
+    const response = await fetch("http://localhost:3000/api/me", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        name: user.name,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(data.message || "Failed to update name");
+      return;
+    }
+
+    setUser(data.user);
+    setName(data.user.name);
+    setMessage("Name updated successfully!");
+  }
 
   // useEffect hook to fetch user data when the component mounts
   // useeffect is a hook that runs after the component renders. It can be used to fetch data, set up subscriptions, and manually change the DOM in React components.
@@ -25,7 +56,8 @@ function Dashboard() {
       return response.json();
     })
     .then((data) => {
-      setUsers([data.user]);
+      setUser(data.user);
+      setName(data.user.name);
     })
     .catch(() => {
       navigate("/login");
@@ -36,16 +68,32 @@ function Dashboard() {
     <main>
       <h1>Dashboard</h1>
 
-      {users.map((user) => (
-        <div key={user.id}>
-          <p>Name: {user.name}</p>
+      {user && (
+        <div>
+          <p>Name: {name}</p>
           <p>Email: {user.email}</p>
+
+          <label>
+            Change Name:
+            <input
+              type="text"
+              value={user.name}
+              onChange={(event) =>
+                setUser({
+                  ...user,
+                  name: event.target.value,
+                })
+              }
+            />
+          </label>
+
+          <button onClick={handleSave}>
+            Save
+          </button>
         </div>
-      ))}
-
-      {/* <p>Welcome! You are now logged in.</p>
-
-      <Link to="/login">Go to Login</Link> */}
+      )}
+      
+      {message && <p>{message}</p>}
     </main>
   );
 }
