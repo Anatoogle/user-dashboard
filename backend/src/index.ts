@@ -6,6 +6,12 @@ import { Prisma } from "./generated/prisma/client.js";
 import bcrypt from "bcrypt";
 import session from "express-session";
 
+// Check if the SESSION_SECRET environment variable is defined
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+  throw new Error("SESSION_SECRET is not defined");
+}
+
 // Create an instance of the Express application
 const app = express();
 
@@ -24,7 +30,7 @@ app.use(express.json());
 // to use sessions, we need to use the express-session middleware
 app.use(
     session({
-        secret: "development-secret",
+        secret: sessionSecret,
         resave: false,
         saveUninitialized: false,
         cookie: {
@@ -75,11 +81,7 @@ app.post("/api/login", async (req, res) => {
     });
 });
 
-// GET /api/me
-// Session available?
-// Yes, than load userId from Session
-// load user from PostgreSQL
-// return User
+// api/me = get the current logged in user
 app.get("/api/me", async (req, res) => {
     if(!req.session.userId) {
         res.status(401).json({
@@ -110,6 +112,22 @@ app.get("/api/me", async (req, res) => {
         },
     });
 })
+
+app.post("/api/logout", (req, res) => {
+    req.session.destroy((error) => {
+        if (error) {
+            res.status(500).json({
+                message: "Could not log out",
+            });
+
+            return;
+        }
+
+        res.json({
+            message: "Logout successful",
+        });
+    });
+});
 
 // Define a route to handle POST requests to the /api/users URL
 app.post("/api/users", async (req, res) => {
