@@ -63,7 +63,7 @@ function Login() {
                 <button type="submit">Login</button>
                 {message && <p>{message}</p>}
             </form>
-            <Link to="/dashboard">Go to Dashboard</Link>
+            <Link to="/register">Don't have an account? Register</Link>
         </main>
     );
 }

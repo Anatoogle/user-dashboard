@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Register() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
     const [message, setMessage] = useState("");
+
+    const navigate = useNavigate();
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -24,7 +27,12 @@ function Register() {
 
         const data = await response.json();
 
-        setMessage(data.message);
+        if (!response.ok) {
+            setMessage(data.message);
+            return;
+        }
+
+        navigate("/login");
     }
 
     return (

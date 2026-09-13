@@ -45,9 +45,24 @@ const PORT = 3000;
 app.post("/api/login", async (req, res) => {
     const { email, password } = req.body;
 
+    if(
+        typeof email !== "string" ||
+        typeof password !== "string" ||
+        email.trim() === "" ||
+        password.trim() === ""
+    ) {
+        res.status(400).json({
+            message: "Email and password are required",
+        });
+        
+        return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
     const user = await prisma.user.findUnique({
         where: {
-            email,
+            email: normalizedEmail,
         },
     });
 
@@ -187,13 +202,22 @@ app.post("/api/users", async (req, res) => {
         return;
     }
 
+    if (password.length < 8) {
+        res.status(400).json({
+            message: "Password must be at least 8 characters long",
+        });
+        return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
         const user = await prisma.user.create({
             data: {
-            name,
-            email,
+            name: name.trim(),
+            email: normalizedEmail,
             password: hashedPassword,
             },
         });
