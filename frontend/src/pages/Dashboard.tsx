@@ -1,23 +1,31 @@
-// import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-type User = {
-  id: number;
-  name: string;
-  email: string;
-};
+import { AuthContext } from "../context/AuthContext";
 
 function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading, setUser } = useContext(AuthContext);
+
+  const [userName, setUserName] = useState("");
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(true);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [loading, user, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setUserName(user.name);
+    }
+  }, [user]);
 
   async function handleSave() {
     if(!user) {
@@ -31,7 +39,7 @@ function Dashboard() {
       },
       credentials: "include",
       body: JSON.stringify({
-        name: user.name,
+        name: name,
       }),
     });
 
@@ -60,8 +68,6 @@ function Dashboard() {
     setPasswordLoading(true);
 
     try {
-
-      
       const response = await fetch("http://localhost:3000/api/me/password", 
         {
           method: "PUT",
@@ -97,64 +103,41 @@ function Dashboard() {
     } finally {
       setPasswordLoading(false);
     }
-    
   };
-
-  // useEffect hook to fetch user data when the component mounts
-  // useeffect is a hook that runs after the component renders. It can be used to fetch data, set up subscriptions, and manually change the DOM in React components.
-  useEffect(() => {
-    fetch("http://localhost:3000/api/me",{
-      credentials: "include",
-    })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Not authenticated");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      setUser(data.user);
-      setName(data.user.name);
-      setLoading(false);
-    })
-    .catch(() => {
-      setLoading(false);
-      navigate("/login");
-    });
-  }, []);
 
   if (loading) {
     return <p>Loading...</p>;
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
     <main>
       <h1>Dashboard</h1>
 
-      {user && (
-        <div>
-          <p>Name: {name}</p>
-          <p>Email: {user.email}</p>
 
-          <label>
-            Change Name:
-            <input
-              type="text"
-              value={user.name}
-              onChange={(event) =>
-                setUser({
-                  ...user,
-                  name: event.target.value,
-                })
-              }
-            />
-          </label>
+      <div>
+        <p>Name: {userName}</p>
+        <p>Email: {user.email}</p>
 
-          <button onClick={handleSave}>
-            Save
-          </button>
-        </div>
-      )}
+        <label>
+          Change Name:
+          <input
+            type="text"
+            value={name}
+            onChange={(event) =>
+              setName(event.target.value)
+            }
+          />
+        </label>
+
+        <button onClick={handleSave}>
+          Save
+        </button>
+      </div>
+
       
       <h2>Change Password</h2>
       <form onSubmit= {handleChangePassword}>

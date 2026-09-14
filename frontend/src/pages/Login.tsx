@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 function Login() {
+    const { setUser } = useContext(AuthContext);
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
@@ -26,6 +29,7 @@ function Login() {
         const data = await response.json();
 
         if(response.ok) {
+            setUser(data.user);
             navigate("/dashboard");
             return;
         }

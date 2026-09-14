@@ -1,6 +1,10 @@
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 function Header() {
+    const { setUser } = useContext(AuthContext);
+
     const navigate = useNavigate();
 
     async function handleLogout() {
@@ -10,6 +14,7 @@ function Header() {
         });
 
         if (response.ok) {
+            setUser(null);
             navigate("/login");
             return;
         }
