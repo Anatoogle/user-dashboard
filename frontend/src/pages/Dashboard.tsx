@@ -6,6 +6,7 @@ function Dashboard() {
   const { user, loading, setUser } = useContext(AuthContext);
 
   const [userName, setUserName] = useState("");
+  const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -24,6 +25,7 @@ function Dashboard() {
     if (user) {
       setName(user.name);
       setUserName(user.name);
+      setEmail(user.email);
     }
   }, [user]);
 
@@ -32,27 +34,33 @@ function Dashboard() {
       return;
     }
 
-    const response = await fetch("http://localhost:3000/api/me", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        name: name,
-      }),
-    });
+    try {
+      const response = await fetch("http://localhost:3000/api/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          name: name,
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      setMessage(data.message);
-      return;
+      if (!response.ok) {
+        setMessage(data.message);
+        return;
+      }
+
+      setUser(data.user);
+      setName(data.user.name);
+      setEmail(data.user.email);
+      setMessage("Name updated successfully!");
+    } catch (error) {
+      console.error(error);
+      setMessage("Could not update name");
     }
-
-    setUser(data.user);
-    setName(data.user.name);
-    setMessage("Name updated successfully!");
   }
 
   async function handleChangePassword(
@@ -105,6 +113,35 @@ function Dashboard() {
     }
   };
 
+  async function handleEmailUpdate() {
+    try {
+      const response = await fetch("http://localhost:3000/api/me/email", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email,
+        }),
+      });
+
+      const data= await response.json();
+
+      if(!response.ok) {
+        setMessage(data.message);
+        return;
+      }
+
+      setUser(data.user);
+      setEmail(data.user.email);
+      setMessage("Email updated successfully!");
+    } catch (error) {
+      console.error(error);
+      setMessage("Could not update email");
+    }
+  }
+
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -122,8 +159,8 @@ function Dashboard() {
         <p>Name: {userName}</p>
         <p>Email: {user.email}</p>
 
+        <h3>Change Name</h3>
         <label>
-          Change Name:
           <input
             type="text"
             value={name}
@@ -139,7 +176,7 @@ function Dashboard() {
       </div>
 
       
-      <h2>Change Password</h2>
+      <h3>Change Password</h3>
       <form onSubmit= {handleChangePassword}>
         <label>
           Current Password: 
@@ -167,6 +204,16 @@ function Dashboard() {
           {passwordLoading ? "Changing..." : "Change Password"}
         </button>
       </form>
+
+      <h3>Change Email</h3>
+      <input
+        type="text"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+      />
+      <button onClick={handleEmailUpdate}>
+        Change Email
+      </button>
       {message && <p>{message}</p>}
     </main>
   );

@@ -11,3 +11,6 @@ npm run dev
 # start frontend server
 npm run dev
 
+# docker
+docker compose --env-file .env.docker up -d      
+docker compose --env-file .env.docker down 

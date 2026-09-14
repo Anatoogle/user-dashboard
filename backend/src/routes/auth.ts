@@ -113,6 +113,15 @@ router.post("/users", async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailRegex.test(normalizedEmail)) {
+        res.status(400).json({
+            message: "Please enter a valid email address",
+        });
+        return;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {

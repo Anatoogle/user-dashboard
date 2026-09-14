@@ -175,4 +175,79 @@ router.put("/me/password", async (req, res) => {
     }
 });
 
+
+router.put("/me/email", async (req, res) => {
+    if(!req.session.userId) {
+        res.status(401).json({
+            message: "Not authenticated",
+        });
+        return;
+    }
+
+    const { email } = req.body;
+
+    if(typeof email !== "string" || email.trim() === ""){
+        res.status(400).json({
+            message: "Email is required",
+        });
+        return;
+    }
+
+    try {
+        const normalizedEmail = email.trim().toLowerCase();
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(normalizedEmail)) {
+            res.status(400).json({
+                message: "Please enter a valid email address",
+            });
+            return;
+        }
+
+        const existingUser = await prisma.user.findUnique({
+            where: {
+                email: normalizedEmail,
+            },
+        });
+
+        if (existingUser && existingUser.id === req.session.userId) {
+            res.status(400).json({
+                message: "This is already your current email",
+            });
+            return;
+        }
+
+        if (existingUser && existingUser.id !== req.session.userId) {
+            res.status(400).json({
+                message: "Email is already in use",
+            });
+            return;
+        }
+
+        const user = await prisma.user.update({
+            where: {
+                id: req.session.userId,
+            },
+            data: {
+                email: normalizedEmail,
+            },
+        });
+
+        res.json({
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(599).json({
+            message: "Could not update email",
+        })
+    }
+})
+
 export default router;
