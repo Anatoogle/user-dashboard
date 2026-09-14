@@ -1,9 +1,12 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import session from "express-session";
 import authRouter from "./routes/auth.js";
 import usersRouter from "./routes/users.js";
+
+// Load environment variables from the .env file
+dotenv.config({ path: "../.env" });
 
 // Check if the SESSION_SECRET environment variable is defined
 const sessionSecret = process.env.SESSION_SECRET;
