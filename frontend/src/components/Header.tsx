@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 function Header() {
     const { setUser } = useContext(AuthContext);
@@ -26,6 +27,7 @@ function Header() {
             <button onClick={handleLogout}>
                 Logout
             </button>
+            <Link to="/settings">Settings</Link>
         </header>
     );
 }
