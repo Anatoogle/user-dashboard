@@ -4,6 +4,8 @@ A small full-stack project built with React, Node.js, Express, PostgreSQL, Prism
 
 The application provides user registration, login, session-based authentication and a simple dashboard with account settings.
 
+Users can create an account, log in, view their profile information and manage their name, email address and password.
+
 
 ## Goal
 
@@ -37,6 +39,39 @@ The project focuses on learning the complete flow from a React frontend to an Ex
 * PostgreSQL database
 * Database migrations with Prisma
 * Dockerized development environment
+
+
+## Screenshots
+
+### Login
+Users can log in with their email and password.
+![alt text](screenshots/login.png)
+
+### Register
+New users can create an account with their name, email and password.
+![alt text](screenshots/register.png)
+
+### Dashboard
+After logging in, users can view their account information.
+![alt text](screenshots/dashboard.png)
+
+### Settings
+Users can update their name and email or change their password.
+![alt text](screenshots/settings.png)
+
+
+Register
+   ↓
+Login
+   ↓
+Dashboard
+   ↓
+Settings
+   ├── Update name
+   ├── Update email
+   └── Change password
+   ↓
+Logout
 
 
 ## Architecture Note
