@@ -60,6 +60,7 @@ Users can update their name and email or change their password.
 ![alt text](screenshots/settings.png)
 
 
+```text
 Register
    ↓
 Login
@@ -72,7 +73,7 @@ Settings
    └── Change password
    ↓
 Logout
-
+```
 
 ## Architecture Note
 
