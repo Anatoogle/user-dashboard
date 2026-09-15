@@ -32,13 +32,39 @@ function Dashboard() {
   }
 
   return (
-    <main>
-      <h1>Dashboard</h1>
-
-      <div>
-        <p>Name: {name}</p>
-        <p>Email: {email}</p>
+    <main className="dashboard">
+      <div className="page-header">
+        <h1>Dashboard</h1>
+        <p>Welcome back, {user.name}.</p>
       </div>
+
+      <div className="stats">
+        <div className="stat-card">
+          <span>Role</span>
+          <strong>User</strong>
+        </div>
+
+        <div className="stat-card">
+          <span>Name</span>
+          <strong>{user.name}</strong>
+        </div>
+
+        <div className="stat-card">
+          <span>Email</span>
+          <strong>{user.email}</strong>
+        </div>
+      </div>
+
+      <section className="profile-card">
+        <div className="avatar">
+          {user.name.charAt(0).toUpperCase()}
+        </div>
+
+        <div className="profile-info">
+          <h2>{name}</h2>
+          <p>{email}</p>
+        </div>
+      </section>
     </main>
   );
 }

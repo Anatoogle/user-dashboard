@@ -1,18 +1,17 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { Link } from "react-router-dom";
 
 function Settings() {
   const { user, loading, setUser } = useContext(AuthContext);
 
-  const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error" | "">("");
 
   const navigate = useNavigate();
 
@@ -25,10 +24,19 @@ function Settings() {
   useEffect(() => {
     if (user) {
       setName(user.name);
-      setUserName(user.name);
       setEmail(user.email);
     }
   }, [user]);
+
+  function showMessage(text: string, type: "success" | "error") {
+    setMessage(text);
+    setMessageType(type);
+
+    setTimeout(() => {
+      setMessage("");
+      setMessageType("");
+    }, 4000);
+  }
 
   async function handleSave() {
     if(!user) {
@@ -50,17 +58,17 @@ function Settings() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.message);
+        showMessage(data.message, "error");
         return;
       }
 
       setUser(data.user);
       setName(data.user.name);
       setEmail(data.user.email);
-      setMessage("Name updated successfully!");
+      showMessage("Name updated successfully!", "success");
     } catch (error) {
       console.error(error);
-      setMessage("Could not update name");
+      showMessage("Could not update name", "error");
     }
   }
 
@@ -70,7 +78,7 @@ function Settings() {
     event.preventDefault();
     
     if(newPassword.length < 4){
-      setMessage("Password must be at least 4 characters long");
+      showMessage("Password must be at least 4 characters long", "error");
       return;
     }
 
@@ -99,16 +107,16 @@ function Settings() {
       }
 
       if (!response.ok) {
-        setMessage(data.message);
+        showMessage(data.message, "error");
         return;
       }
 
-      setMessage(data.message);
+      showMessage("Password updated successfully!", "success");
       setCurrentPassword("");
       setNewPassword("");
     } catch (error) {
       console.error(error);
-      setMessage("Could not change password");
+      showMessage("Could not change password", "error");
     } finally {
       setPasswordLoading(false);
     }
@@ -130,16 +138,16 @@ function Settings() {
       const data= await response.json();
 
       if(!response.ok) {
-        setMessage(data.message);
+        showMessage(data.message, "error");
         return;
       }
 
       setUser(data.user);
       setEmail(data.user.email);
-      setMessage("Email updated successfully!");
+      showMessage("Email updated successfully!", "success");
     } catch (error) {
       console.error(error);
-      setMessage("Could not update email");
+      showMessage("Could not update email", "error");
     }
   }
 
@@ -152,87 +160,91 @@ function Settings() {
   }
 
   return (
-    <main>
-      <h1>Settings</h1>
+    <main className="settings">
+        <div className="page-header">
+            <h1>Settings</h1>
+            <p>Manage your account settings.</p>
+        </div>
 
+        <section className="settings-card">
+            <div className="settings-section">
+                <h2>Profile</h2>
 
-      <div>
-        <p>Name: {userName}</p>
-        <p>Email: {user.email}</p>
+                <label>
+                    Name
+                <input
+                    type="text"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                />
+                </label>
 
-        <h3>Change Name</h3>
-        <label>
-          <input
-            type="text"
-            value={name}
-            onChange={(event) =>
-              setName(event.target.value)
-            }
-          />
-        </label>
+                <button onClick={handleSave}>
+                    Save Name
+                </button>
+            </div>
 
-        <button onClick={handleSave}>
-          Save
-        </button>
-      </div>
+            <div className="settings-section">
+                <h2>Email</h2>
 
-      
-      <h3>Change Password</h3>
-      <form onSubmit= {handleChangePassword}>
-        <label>
-          Current Password: 
-          <input
-            type="password"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            required
-          />
-        </label>
+                <label>
+                    Email
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                    />
+                </label>
 
-        <label>
-          New Password:
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            minLength={4}
-            required
-            placeholder="At least 4 characters"
-          />
-        </label>
+                <button onClick={handleEmailUpdate}>
+                    Change Email
+                </button>
+            </div>
 
-        <button type="submit" disabled={passwordLoading}>
-          {passwordLoading ? "Changing..." : "Change Password"}
-        </button>
-      </form>
+            <div className="settings-section">
+                <h2>Password</h2>
 
-      <h3>Change Email</h3>
-      <input
-        type="text"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-      />
-      <button onClick={handleEmailUpdate}>
-        Change Email
-      </button>
-      {message && <p>{message}</p>}
-      <div>
-        <Link to="/dashboard">Back to Dashboard</Link>
-      </div>
+                <form onSubmit={handleChangePassword}>
+                <label>
+                    Current Password
+                    <input
+                        type="password"
+                        value={currentPassword}
+                        onChange={(event) =>
+                            setCurrentPassword(event.target.value)
+                    }
+                    required
+                    />
+                </label>
+
+                <label>
+                    New Password
+                    <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(event) =>
+                            setNewPassword(event.target.value)
+                        }
+                        minLength={4}
+                        required
+                        placeholder="At least 4 characters"
+                    />
+                </label>
+
+                <button type="submit" disabled={passwordLoading}>
+                    {passwordLoading ? "Changing..." : "Change Password"}
+                </button>
+                </form>
+            </div>
+
+            {message && 
+              <p className={`settings-message ${messageType}`}>
+                {message}
+              </p>}
+
+        </section>
     </main>
   );
 }
-
-/* function Settings() {
-    const {user } = useContext(AuthContext);
-
-    return (
-        <div>
-            <h1> Settings</h1>
-            <p>Name: {user?.name}</p>
-            <p>Email: {user?.email}</p>
-        </div>
-    );
-} */
 
 export default Settings;

@@ -38,36 +38,52 @@ function Login() {
     }
 
     return (      
-        <main>
-            <h1>Login</h1>
+        <main className="auth-page">
+            <div className="auth-card">
+                <h1>Welcome back</h1>
+                <p className="auth-subtitle">
+                    Log in to your account
+                </p>
 
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label htmlFor="email">Email </label>
+                <form onSubmit={handleSubmit}>
+                    <label htmlFor="email">
+                        Email
+                    </label>
+
                     <input
                         id="email"
                         type="email"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
                         placeholder="your@email.com"
+                        required
                     />
-                </div>
 
-                <div>
-                    <label htmlFor="password">Password </label>
+                    <label htmlFor="password">
+                        Password
+                    </label>
+
                     <input
                         id="password"
                         type="password"
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder="Your password"
+                        required
                     />
-                </div>
 
-                <button type="submit">Login</button>
-                {message && <p>{message}</p>}
-            </form>
-            <Link to="/register">Don't have an account? Register</Link>
+                    <button type="submit">
+                        Login
+                    </button>
+
+                    {message && <p className="auth-message">{message}</p>}
+                </form>
+
+                <p className="auth-link">
+                    Don't have an account?{" "}
+                    <Link to="/register">Register</Link>
+                </p>
+            </div>
         </main>
     );
 }
