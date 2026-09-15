@@ -9,6 +9,7 @@ function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState<"success" | "error" | "">("");
     const navigate = useNavigate();
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -34,7 +35,17 @@ function Login() {
             return;
         }
 
-        setMessage(data.message);
+        showMessage(data.message, "error");
+    }
+
+    function showMessage(text: string, type: "success" | "error") {
+        setMessage(text);
+        setMessageType(type);
+
+        setTimeout(() => {
+            setMessage("");
+            setMessageType("");
+        }, 3000);
     }
 
     return (      
@@ -77,7 +88,7 @@ function Login() {
                         Login
                     </button>
 
-                    {message && <p className="auth-message">{message}</p>}
+                    {message && <p className={`auth-message ${messageType}`}>{message}</p>}
                 </form>
 
                 <p className="auth-link">
